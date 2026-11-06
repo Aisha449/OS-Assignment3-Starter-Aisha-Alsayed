@@ -132,8 +132,8 @@
 
 ## Your Development Log
 
-### Entry 1 - [Date and Time]
-**What I did**:
+### Entry 1 - [Nov 5,2026 3:30]
+**what I did**:update the id to my id
 
 **Details**:
 
