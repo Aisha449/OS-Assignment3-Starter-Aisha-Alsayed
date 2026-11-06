@@ -135,78 +135,78 @@
 ### Entry 1 - [Nov 5,2026 3:30]
 **what I did**:update the id to my id
 
-**Details**:
+**Details**: I opened SchedulerSimulationSync.java and replaced the default student ID with my own student ID.
 
-**Challenges**:
+**Challenges**:I needed to locate the correct place where the ID was stored.
 
-**Solution**:
+**Solution**:I updated the ID in the source code.
 
-**Time spent**:
-
----
-
-### Entry 2 - [Date and Time]
-**What I did**:
-
-**Details**:
-
-**Challenges**:
-
-**Solution**:
-
-**Time spent**:
+**Time spent**:10 min
 
 ---
 
-### Entry 3 - [Date and Time]
-**What I did**:
+### Entry 2 - [November 5, 2026 3:41]
+**What I did**:Implemented Feature 1: Protected the ready queue with a ReentrantLock.
 
-**Details**:
+**Details**:I added a ReentrantLock to protect the ready queue and prevent multiple CPU threads from accessing and modifying it simultaneously. I used the lock in the queue operations.
 
-**Challenges**:
+**Challenges**:I needed to make sure that only one thread could modify the queue at a time.
 
-**Solution**:
+**Solution**:I used the lock to protect the critical sections and released it using finally.
 
-**Time spent**:
-
----
-
-### Entry 4 - [Date and Time]
-**What I did**:
-
-**Details**:
-
-**Challenges**:
-
-**Solution**:
-
-**Time spent**:
+**Time spent**:20 min
 
 ---
 
-### Entry 5 - [Date and Time]
-**What I did**:
+### Entry 3 - [November 6, 2026 3:00]
+**What I did**:Implemented Feature 2: Added locks to the shared statistics counters.
 
-**Details**:
+**Details**:I added a ReentrantLock to protect the shared statistics, including the context switch count, completed process count, and total service time.
 
-**Challenges**:
+**Challenges**:Multiple CPU threads could update the statistics simultaneously, which could lead to incorrect values.
 
-**Solution**:
+**Solution**: I protected the shared statistics updates and getters using a lock.
 
-**Time spent**:
+**Time spent**:20 min
 
 ---
 
-### Entry 6 - [Optional - Date and Time]
-**What I did**:
+### Entry 4 - [November 6, 2026 3:21]
+**What I did**:Implemented Feature 3: Replaced busy-waiting with a counting semaphore.
 
-**Details**:
+**Details**:I added a counting semaphore to notify CPU threads when processes are available in the ready queue. I also implemented a mechanism to wake up the CPU threads when all processes have completed.
 
-**Challenges**:
+**Challenges**:I needed to prevent CPU threads from continuously checking the queue when it was empty.
 
-**Solution**:
+**Solution**: I used Semaphore.acquire() and Semaphore.release() to coordinate the CPU threads.
 
-**Time spent**:
+**Time spent**:25 min
+
+---
+
+### Entry 5 - [November 6, 2026 4:00]
+**What I did**:Updated and refined SchedulerSimulationSync.java.
+
+**Details**:I made additional updates to the scheduler implementation after adding the synchronization features.
+
+**Challenges**: I needed to review the implementation and ensure that the changes were consistent.
+
+**Solution**:I reviewed and updated the source code through several commits.
+
+**Time spent**:10 min
+
+---
+
+### Entry 6 - [November 7, 2026]
+**What I did**:Updated MY_WORK.md and modified the first Development Log entry.
+
+**Details**: I started documenting my work in MY_WORK.md and revised the first entry to make the development log clearer and more accurate.
+
+**Challenges**:I needed to organize the documentation and describe my implementation work clearly.
+
+**Solution**: I updated the documentation and committed the changes to GitHub.
+
+**Time spent**:10 min
 
 ---
 
@@ -240,7 +240,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[I learned that synchronization is important when multiple threads access shared data at the same time. A race condition can happen when two threads read and update the same variable before either update is completed. In this assignment, I used a ReentrantLock to protect critical sections in the ready queue and shared statistics. I used try and finally to make sure that each lock is released even if an operation is interrupted by an exception. I also learned that a counting semaphore allows CPU threads to wait when the ready queue is empty instead of continuously checking it. The most surprising part was that the original starter could fail because multiple CPUs might select the same process.]
 
 ## Question 2: What was the most challenging part of this assignment?
 
@@ -248,7 +248,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[The most challenging part was understanding how to coordinate multiple CPU threads safely. The ready queue is shared, so two CPUs must not remove or modify its elements at the same time. I also had to understand the difference between protecting the queue and protecting the shared statistics. Another challenge was understanding how the semaphore should wake up CPU threads when processes become available. I learned that the last completed process must also wake up CPUs that are still blocked, so the program can terminate correctly.]
 
 ## Question 3: How did you overcome the challenges you faced?
 
@@ -256,7 +256,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[I worked through the assignment one feature at a time instead of changing everything at once. First, I reviewed the ready queue methods and added a lock around the operations that access the shared list and map. Then, I protected the statistics updates and getters using the statistics lock. After that, I used a counting semaphore to replace the busy-waiting loop in the CPU workers. I also reviewed the code after each feature and used separate Git commits to track the changes. This approach helped me understand the purpose of each synchronization mechanism.]
 
 ## Question 4: Where can synchronization concepts be applied in real-world applications?
 
@@ -264,7 +264,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[Synchronization is used in banking systems when multiple transactions access the same account balance. A lock can prevent two transactions from updating the balance at the same time and producing an incorrect result. It is also useful in online ticket booking, where multiple users may try to reserve the same seat. Databases use synchronization to protect shared data when many users access or modify records. Print queues are another example because several users may send documents to a shared printer. These examples are similar to my assignment because multiple threads or users need safe access to shared resources.]
 
 ### Optional: What would you like to learn more about?
 
