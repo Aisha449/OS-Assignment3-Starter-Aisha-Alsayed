@@ -130,7 +130,7 @@ statsLock.unlock();}
     }
         finally{
         statsLock.unlock();}
-}
+}}
 
 // ⚠️ THE READY QUEUE: shared by ALL the CPU threads ⚠️
 // In Assignment 1 only the main thread used the queue. Now several CPUs poll and re-enqueue processes
@@ -193,7 +193,7 @@ class ReadyQueue {
         queueLock.unlock();
     }
     }
-
+}
     // Names of the processes currently waiting in the queue (used to display the ready queue)
     public String snapshot() {
         // TODO Feature 1: protect this critical section
