@@ -298,7 +298,7 @@
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[The final version completed all 12 processes successfully using 4 CPUs. The verification output showed 25 expected and observed context switches, 12 expected and observed completed processes, and 73187 ms expected and observed total service time. The busy-waiting polls were also 0, confirming that the semaphore replaced the polling mechanism successfully. In the original starter, two CPU threads could read the same shared value before either updated it, causing a lost update. This happens because the read-modify-write operation is not protected by mutual exclusion, and thread scheduling can cause the same problem even without the artificial RaceWindow.pause().]
 
 Verification block of the **original starter**:
 ```
