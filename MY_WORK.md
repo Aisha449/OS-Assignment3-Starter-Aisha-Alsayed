@@ -36,7 +36,7 @@
 | **Student ID** | [445052832] |
 | **University Email** | [445052832]@std.psau.edu.sa |
 | **GitHub Username** | [Aisha449] |
-| **Repository Link** | [https://github.com/Aisha449/OS-Assignment3-Starter-Aisha-Alsayed/edit/main/MY_WORK.md] |
+| **Repository Link** | [(https://github.com/Aisha449/OS-Assignment3-Starter-Aisha-Alsayed/tree/main)] |
  
 ---
 
