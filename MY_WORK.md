@@ -298,20 +298,38 @@
 
 **Your Answer:** *(3-5 sentences)*
 
-[The final version completed all 12 processes successfully using 4 CPUs. The verification output showed 25 expected and observed context switches, 12 expected and observed completed processes, and 73187 ms expected and observed total service time. The busy-waiting polls were also 0, confirming that the semaphore replaced the polling mechanism successfully. In the original starter, two CPU threads could read the same shared value before either updated it, causing a lost update. This happens because the read-modify-write operation is not protected by mutual exclusion, and thread scheduling can cause the same problem even without the artificial RaceWindow.pause().]
+[In the original starter version, multiple CPU worker threads accessed and modified shared statistical counters simultaneously without synchronization, resulting in lost updates. In my specific run (Student ID: 445052832), the expected context switches were 25 while the observed count was lower, and completed processes were lost. A lost update occurs when two CPUs read the same value of a shared variable before either writes back its increment. On a real machine, CPU preemption or hardware parallelism creates this tiny timing window during read-modify-write instructions even without RaceWindow.pause(). These bugs are notoriously difficult to detect because they depend on unpredictable thread interleaving and rare hardware scheduling timings]
 
 Verification block of the **original starter**:
 ```
-[Paste the verification block (or the exception/watchdog message) of the starter here]
+[═══ VERIFICATION (expected values are computed from YOUR seed) ═══
+  Context switches (quanta executed)     expected 25       observed 7        ✘ MISMATCH
+  Completed processes                    expected 12       observed 4        ✘ MISMATCH
+  Total service time (ms)                expected 73187    observed 26119    ✘ MISMATCH
+  Busy-waiting polls (must be 0)         expected 0        observed 18452    ✘ MISMATCH
+  ✘ At least one check failed (see the ✘ lines above): a race condition or busy waiting is still present.]
 ```
 
 Verification block of **my final version**:
 ```
-[Paste the verification block of your final version here (all lines ✔)]
+[═══ VERIFICATION (expected values are computed from YOUR seed) ═══
+  Context switches (quanta executed)     expected 25       observed 25       ✔
+  Completed processes                    expected 12       observed 12       ✔
+  Total service time (ms)                expected 73187    observed 73187    ✔
+  Busy-waiting polls (must be 0)         expected 0        observed 0        ✔
+  ✔ All shared values are consistent.]
 ```
 
 **Explanation of the timeline:**
-[Explain the lost update step by step.]
+[CPU-1 executes incrementContextSwitch() and reads contextSwitchCount = 12.
+
+Before CPU-1 can write, RaceWindow.pause() simulates preemption, allowing CPU-2 to enter the method and read the same un-updated contextSwitchCount = 12.
+
+CPU-1 resumes, calculates 12 + 1 = 13, and writes 13 back to contextSwitchCount.
+
+CPU-2 resumes, calculates 12 + 1 = 13, and overwrites contextSwitchCount with 13.
+
+Both threads performed an increment, but contextSwitchCount only increased by 1 instead of 2, resulting in a lost update]
 
 ## Question 2: Critical Sections and Lock Granularity
 
@@ -321,12 +339,15 @@ Verification block of **my final version**:
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[I used two separate ReentrantLock instances: statsLock to protect the global performance counters and queueLock to protect the shared ready queue data structures (LinkedList and HashMap). I chose a single lock for all three statistical variables (statsLock) because these counters are updated together during quantum execution events, keeping locking logic simple without creating measurable contention overhead. The ready queue is protected by a separate lock to decouple queue operations from stats updates, preventing CPUs from blocking queue accesses while performing logging or counter updates. Mutual exclusion is guaranteed by enforcing lock() and try-finally { unlock() } blocks, while using standard non-fair ReentrantLock trades off strict FIFO thread acquisition order for higher system throughput.]
 
 | Critical section (variable / method) | Lock used | Why it needs protection |
-|---|---|---|
-| [e.g., `ReadyQueue.poll()`] | [lock name] | [reason] |
-| [...] | [...] | [...] |
+| :--- | :--- | :--- |
+| `SharedStats.incrementContextSwitch()`, `incrementCompletedProcess()`, `addServiceTime()` | `statsLock` | Prevents race conditions during read-modify-write operations on shared counters. |
+| `SharedStats.getContextSwitchCount()`, `getCompletedProcessCount()`, `getTotalServiceTime()` | `statsLock` | Ensures memory visibility and prevents dirty reads while updates are in progress. |
+| `ReadyQueue.add()` | `queueLock` | Protects simultaneous insertions into `list` and `map` to prevent structural corruption. |
+| `ReadyQueue.poll()` | `queueLock` | Prevents two CPUs from retrieving and popping the exact same head thread. |
+| `ReadyQueue.processOf()`, `snapshot()` | `queueLock` | Ensures safe concurrent map lookups and prevents concurrent modification exceptions during iteration. |
 
 ## Question 3: Busy Waiting vs Semaphore
 
@@ -336,7 +357,7 @@ Verification block of **my final version**:
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[In the starter code, idle CPU worker threads continuously polled the ready queue in an active while loop when no processes were available, wasting significant CPU cycles through busy waiting (resulting in over 18,000 polls in the starter output). In the fixed version, the counting semaphore readyCount tracks the exact number of processes waiting in the ready queue. The semaphore is initialized to 0 because the queue starts empty before processes are queued, and its value increases to 12 (numProcesses) after main populates the initial jobs. At the end of execution, the last completing CPU calls readyCount.release(totalCPUs) to unblock any idle worker CPUs waiting inside acquire(), allowing them to check the completion condition and cleanly exit their execution loops.]
 
 ## Question 4: Classical Problems and Deadlock
 
@@ -347,24 +368,28 @@ Verification block of **my final version**:
 **Your Answer:** *(3-5 sentences)*
 
 **Classical problem and roles**:
-[Name the problem; who is the producer, who is the consumer?]
+[This system represents the Producer-Consumer Problem (or Multi-Producer Multi-Consumer Bounded-Buffer variant). The main thread acts as an initial Producer by adding processes, while CPU worker threads act as Consumers when taking processes to execute, and as Producers when re-enqueueing unfinished processes that yield after a quantum.]
 
 **Semaphores for a bounded queue (name and initial value)**:
-[Name the three semaphores and their initial values.]
+[mutex = 1 (Binary Semaphore / Mutex for mutual exclusion on queue modification)
+
+emptySlots = K (Counting Semaphore tracking empty buffer slots, initialized to queue capacity K)
+
+fullSlots = 0 (Counting Semaphore tracking available processes, initialized to 0)]
 
 **Deadlock scenario and prevention**:
-[Describe the scenario and the necessary condition you would break.]
+[A deadlock occurs if a CPU worker thread acquires mutex before waiting on emptySlots.acquire() when the queue is full. The CPU holds the mutex while waiting for an empty slot, but the consumer thread that could free a slot is blocked indefinitely from acquiring mutex. To prevent this deadlock, we break the Hold and Wait condition by ensuring threads wait on counting semaphores (fullSlots/emptySlots) before acquiring the binary mutex lock..]
 
 ## Summary
 
 **Key concepts I understood through these questions:**
-1.
-2.
-3.
+1.Race conditions during read-modify-write operations and critical section protection using ReentrantLock.
+2.Efficient thread synchronization using counting semaphores to eliminate CPU busy-waiting.
+3.Preventing Producer-Consumer deadlocks by establishing strict lock acquisition order.
 
 **Concepts I need to study more:**
-1.
-2.
+1.Fair vs. Non-fair locking policies and their impact on thread starvation.
+2.Advanced lock-free data structures using Atomic references and Compare-And-Swap (CAS) primitives.
 
 ---
 
